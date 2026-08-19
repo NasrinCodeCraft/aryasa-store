@@ -1,4 +1,4 @@
-import { Container, clx } from "@modules/common/components/ui"
+import { clx } from "@modules/common/components/ui"
 import Image from "next/image"
 import React from "react"
 
@@ -14,54 +14,88 @@ type ThumbnailProps = {
 }
 
 const Thumbnail: React.FC<ThumbnailProps> = ({
-  thumbnail,
-  images,
-  size = "small",
-  isFeatured,
-  className,
-  "data-testid": dataTestid,
-}) => {
+                                               thumbnail,
+                                               images,
+                                               size = "small",
+                                               isFeatured,
+                                               className,
+                                               "data-testid": dataTestid,
+                                             }) => {
   const initialImage = thumbnail || images?.[0]?.url
 
   return (
-    <Container
+    <div
       className={clx(
-        "relative w-full overflow-hidden p-4 bg-ui-bg-subtle shadow-elevation-card-rest rounded-large group-hover:shadow-elevation-card-hover transition-shadow ease-in-out duration-150",
-        className,
+        `
+          relative
+          w-full
+          overflow-hidden
+          bg-[rgb(var(--color-surface-muted))]
+        `,
         {
-          "aspect-[11/14]": isFeatured,
-          "aspect-[9/16]": !isFeatured && size !== "square",
-          "aspect-[1/1]": size === "square",
+          "aspect-[11/12]": isFeatured,
+          "aspect-square": size === "square",
+          "aspect-[4/5]": !isFeatured && size !== "square",
           "w-[180px]": size === "small",
           "w-[290px]": size === "medium",
           "w-[440px]": size === "large",
           "w-full": size === "full",
-        }
+        },
+        className
       )}
       data-testid={dataTestid}
     >
-      <ImageOrPlaceholder image={initialImage} size={size} />
-    </Container>
-  )
-}
+      {initialImage ? (
+        <Image
+          src={initialImage}
+          alt=""
+          fill
+          draggable={false}
+          quality={80}
+          className="
+            object-cover
+            object-center
+            transition-transform
+            duration-500
+            ease-out
+            group-hover:scale-[1.04]
+          "
+          sizes="
+            (max-width: 640px) 50vw,
+            (max-width: 1024px) 33vw,
+            25vw
+          "
+        />
+      ) : (
+        <div
+          className="
+            absolute
+            inset-0
+            flex
+            items-center
+            justify-center
+            bg-[rgb(var(--color-surface-muted))]
+            text-[rgb(var(--color-foreground-muted))]
+          "
+        >
+          <PlaceholderImage size={24} />
+        </div>
+      )}
 
-const ImageOrPlaceholder = ({
-  image,
-  size,
-}: Pick<ThumbnailProps, "size"> & { image?: string }) => {
-  return image ? (
-    <Image
-      src={image}
-      alt="Thumbnail"
-      className="absolute inset-0 object-cover object-center"
-      draggable={false}
-      quality={50}
-      sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
-      fill
-    />
-  ) : (
-    <div className="w-full h-full absolute inset-0 flex items-center justify-center">
-      <PlaceholderImage size={size === "small" ? 16 : 24} />
+      {/* Image overlay */}
+      <div
+        className="
+          pointer-events-none
+          absolute inset-0
+          bg-gradient-to-t
+          from-black/10
+          via-transparent
+          to-transparent
+          opacity-0
+          transition-opacity duration-300
+          group-hover:opacity-100
+        "
+      />
     </div>
   )
 }

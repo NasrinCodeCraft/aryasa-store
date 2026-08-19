@@ -1,4 +1,6 @@
 import React, { Suspense } from "react"
+import { notFound } from "next/navigation"
+import { HttpTypes } from "@medusajs/types"
 
 import ImageGallery from "@modules/products/components/image-gallery"
 import ProductActions from "@modules/products/components/product-actions"
@@ -7,8 +9,6 @@ import ProductTabs from "@modules/products/components/product-tabs"
 import RelatedProducts from "@modules/products/components/related-products"
 import ProductInfo from "@modules/products/templates/product-info"
 import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
-import { notFound } from "next/navigation"
-import { HttpTypes } from "@medusajs/types"
 
 import ProductActionsWrapper from "./product-actions-wrapper"
 
@@ -20,52 +20,121 @@ type ProductTemplateProps = {
 }
 
 const ProductTemplate: React.FC<ProductTemplateProps> = ({
-  product,
-  region,
-  countryCode,
-  images,
-}) => {
-  if (!product || !product.id) {
+                                                           product,
+                                                           region,
+                                                           countryCode,
+                                                           images,
+                                                         }) => {
+  if (!product?.id) {
     return notFound()
   }
 
   return (
-    <>
-      <div
-        className="content-container  flex flex-col small:flex-row small:items-start py-6 relative"
+    <main dir="rtl" className="bg-[rgb(var(--color-background))]">
+      {/* Product */}
+      <section
+        className="content-container py-6 sm:py-10 lg:py-14"
         data-testid="product-container"
       >
-        <div className="flex flex-col small:sticky small:top-48 small:py-0 small:max-w-[300px] w-full py-8 gap-y-6">
-          <ProductInfo product={product} />
-          <ProductTabs product={product} />
+        {/* Breadcrumb */}
+        <div className="mb-6 text-xs text-[rgb(var(--color-foreground-muted))]">
+          فروشگاه
+          <span className="mx-2">/</span>
+          {product.title}
         </div>
-        <div className="block w-full relative">
-          <ImageGallery images={images} />
-        </div>
-        <div className="flex flex-col small:sticky small:top-48 small:py-0 small:max-w-[300px] w-full py-8 gap-y-12">
-          <ProductOnboardingCta />
-          <Suspense
-            fallback={
-              <ProductActions
-                disabled={true}
-                product={product}
-                region={region}
-              />
-            }
+
+        <div
+          className="
+            grid grid-cols-1 gap-8
+            lg:grid-cols-[1.15fr_0.85fr]
+            lg:items-start
+            lg:gap-12
+          "
+        >
+          {/* Gallery */}
+          <div
+            className="
+              order-1
+              overflow-hidden
+              rounded-3xl
+              border border-[rgb(var(--color-border))]
+              bg-[rgb(var(--color-surface))]
+              p-2 sm:p-4
+              shadow-[var(--shadow-card)]
+            "
           >
-            <ProductActionsWrapper id={product.id} region={region} />
-          </Suspense>
+            <ImageGallery images={images} />
+          </div>
+
+          {/* Product information */}
+          <div className="order-2 lg:sticky lg:top-28">
+            <div
+              className="
+                rounded-3xl
+                border border-[rgb(var(--color-border))]
+                bg-[rgb(var(--color-surface))]
+                p-5 sm:p-7
+                shadow-[var(--shadow-card)]
+              "
+            >
+              <ProductInfo product={product} />
+
+              <div className="my-6 h-px bg-[rgb(var(--color-border))]" />
+
+              <Suspense
+                fallback={
+                  <ProductActions
+                    disabled
+                    product={product}
+                    region={region}
+                  />
+                }
+              >
+                <ProductActionsWrapper
+                  id={product.id}
+                  region={region}
+                />
+              </Suspense>
+
+              <ProductOnboardingCta />
+            </div>
+
+            {/* Tabs */}
+            <div
+              className="
+                mt-5
+                rounded-3xl
+                border border-[rgb(var(--color-border))]
+                bg-[rgb(var(--color-surface))]
+                p-5 sm:p-7
+              "
+            >
+              <ProductTabs product={product} />
+            </div>
+          </div>
         </div>
-      </div>
-      <div
-        className="content-container my-16 small:my-32"
+      </section>
+
+      {/* Related products */}
+      <section
+        className="
+          border-t
+          border-[rgb(var(--color-border))]
+          bg-[rgb(var(--color-surface-muted))]
+          py-14 sm:py-20
+        "
         data-testid="related-products-container"
       >
-        <Suspense fallback={<SkeletonRelatedProducts />}>
-          <RelatedProducts product={product} countryCode={countryCode} />
-        </Suspense>
-      </div>
-    </>
+        <div className="content-container">
+          <Suspense fallback={<SkeletonRelatedProducts />}>
+            <RelatedProducts
+              product={product}
+              countryCode={countryCode}
+            />
+          </Suspense>
+        </div>
+      </section>
+    </main>
   )
 }
 

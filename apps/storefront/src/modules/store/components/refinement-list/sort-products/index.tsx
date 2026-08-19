@@ -13,35 +13,37 @@ type SortProductsProps = {
 const sortOptions = [
   {
     value: "created_at",
-    label: "Latest Arrivals",
+    label: "جدیدترین محصولات",
   },
   {
     value: "price_asc",
-    label: "Price: Low -> High",
+    label: "ارزان‌ترین",
   },
   {
     value: "price_desc",
-    label: "Price: High -> Low",
+    label: "گران‌ترین",
   },
 ]
 
 const SortProducts = ({
-  "data-testid": dataTestId,
-  sortBy,
-  setQueryParams,
-}: SortProductsProps) => {
+                        "data-testid": dataTestId,
+                        sortBy,
+                        setQueryParams,
+                      }: SortProductsProps) => {
   const handleChange = (value: string) => {
-    setQueryParams("sortBy", value as SortOptions)
+    setQueryParams("sortBy", value)
   }
 
   return (
-    <FilterRadioGroup
-      title="Sort by"
-      items={sortOptions}
-      value={sortBy}
-      handleChange={handleChange}
-      data-testid={dataTestId}
-    />
+    <div dir="rtl">
+      <FilterRadioGroup
+        title="مرتب‌سازی"
+        items={sortOptions}
+        value={sortBy}
+        handleChange={handleChange}
+        data-testid={dataTestId}
+      />
+    </div>
   )
 }
 

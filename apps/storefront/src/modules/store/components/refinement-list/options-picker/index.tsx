@@ -55,17 +55,18 @@ const OptionsPicker = ({
   }
 
   return (
-    <div className="flex flex-col gap-y-4">
+    <div dir="rtl" className="flex flex-col gap-y-4">
       <div className="flex items-center justify-between px-1">
-        <span className="txt-compact-small-plus text-ui-fg-subtle">
-          Options
+        <span className="text-sm font-semibold text-[rgb(var(--color-foreground))]">
+          فیلترها
         </span>
       </div>
+
       <Accordion.Root
         type="multiple"
         value={openItems}
-        onValueChange={(values) => setOpenItems(values as string[])}
-        className="flex flex-col gap-y-3 pr-6"
+        onValueChange={(values) => setOpenItems(values)}
+        className="flex flex-col gap-y-3"
       >
         {options.map((option) => {
           const values =
@@ -75,8 +76,12 @@ const OptionsPicker = ({
                 label: value.value,
               }))
               .filter(
-                (value): value is { id: string; label: string } =>
-                  !!value.id && !!value.label
+                (
+                  value
+                ): value is {
+                  id: string
+                  label: string
+                } => !!value.id && !!value.label
               ) || []
 
           if (!values.length) {
@@ -85,6 +90,7 @@ const OptionsPicker = ({
 
           const toggleValue = (valueId: string) => {
             const isSelected = selectedValueIds.includes(valueId)
+
             const nextSelections = isSelected
               ? selectedValueIds.filter((id) => id !== valueId)
               : [...selectedValueIds, valueId]
@@ -93,6 +99,7 @@ const OptionsPicker = ({
           }
 
           const isOpen = openItems.includes(option.id)
+
           const selectedCount = values.filter((value) =>
             selectedValueIds.includes(value.id)
           ).length
@@ -101,21 +108,55 @@ const OptionsPicker = ({
             <Accordion.Item
               key={option.id}
               value={option.id}
-              className="overflow-hidden"
+              className="
+                overflow-hidden
+                rounded-2xl
+                border
+                border-[rgb(var(--color-border))]
+                bg-[rgb(var(--color-surface))]
+              "
             >
               <Accordion.Header>
-                <Accordion.Trigger className="flex w-full items-center justify-between py-3 text-left">
+                <Accordion.Trigger
+                  className="
+                    flex w-full
+                    items-center justify-between
+                    px-4 py-3
+                    text-right
+                  "
+                >
                   <div className="flex items-center gap-2">
-                    <span className="txt-compact-small-plus text-ui-fg-base">
-                      {option.title || "Option"}
+                    <span className="text-sm font-semibold text-[rgb(var(--color-foreground))]">
+                      {option.title || "گزینه"}
                     </span>
-                    <span className="txt-compact-small-plus text-ui-fg-muted">
-                      ({selectedCount})
-                    </span>
+
+                    {selectedCount > 0 && (
+                      <span
+                        className="
+                          flex h-5 min-w-5
+                          items-center justify-center
+                          rounded-full
+                          bg-[rgb(var(--color-primary))]
+                          px-1.5
+                          text-[10px]
+                          font-bold
+                          text-white
+                        "
+                      >
+                        {selectedCount}
+                      </span>
+                    )}
                   </div>
+
                   <span
                     className={clsx(
-                      "flex h-7 w-7 items-center justify-center text-ui-fg-muted transition-transform duration-150",
+                      `
+                        flex h-7 w-7
+                        items-center justify-center
+                        rounded-lg
+                        text-[rgb(var(--color-foreground-muted))]
+                        transition-transform duration-200
+                      `,
                       {
                         "rotate-180": isOpen,
                       }
@@ -125,7 +166,8 @@ const OptionsPicker = ({
                   </span>
                 </Accordion.Trigger>
               </Accordion.Header>
-              <Accordion.Content className="pb-4 pt-1">
+
+              <Accordion.Content className="px-4 pb-4 pt-1">
                 <div className="flex flex-wrap gap-2">
                   {values.map((value) => {
                     const isSelected = selectedValueIds.includes(value.id)
@@ -133,15 +175,30 @@ const OptionsPicker = ({
                     return (
                       <button
                         key={value.id}
+                        type="button"
                         onClick={() => toggleValue(value.id)}
                         className={clsx(
-                          "border-ui-border-base border text-small-regular h-10 rounded-rounded px-3 flex items-center transition-colors duration-150",
-                          {
-                            "border-ui-border-interactive text-ui-fg-base":
-                              isSelected,
-                            "text-ui-fg-muted hover:text-ui-fg-base":
-                              !isSelected,
-                          }
+                          `
+      rounded-xl
+      border
+      px-3 py-2
+      text-xs font-medium
+      transition-all duration-200
+    `,
+                          isSelected
+                            ? `
+        border-[rgb(var(--color-primary))]
+        bg-[rgb(var(--color-primary)/0.08)]
+        text-[rgb(var(--color-primary))]
+        shadow-sm
+      `
+                            : `
+        border-[rgb(var(--color-border))]
+        bg-[rgb(var(--color-surface))]
+        text-[rgb(var(--color-foreground-muted))]
+        hover:border-[rgb(var(--color-primary))]
+        hover:text-[rgb(var(--color-primary))]
+      `
                         )}
                         aria-pressed={isSelected}
                       >

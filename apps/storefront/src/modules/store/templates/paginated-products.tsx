@@ -16,14 +16,14 @@ type PaginatedProductsParams = {
 }
 
 export default async function PaginatedProducts({
-  sortBy,
-  page,
-  collectionId,
-  categoryId,
-  productsIds,
-  countryCode,
-  optionValueIds,
-}: {
+                                                  sortBy,
+                                                  page,
+                                                  collectionId,
+                                                  categoryId,
+                                                  productsIds,
+                                                  countryCode,
+                                                  optionValueIds,
+                                                }: {
   sortBy?: SortOptions
   page: number
   collectionId?: string
@@ -33,23 +33,23 @@ export default async function PaginatedProducts({
   optionValueIds?: OptionValueIds
 }) {
   const queryParams: PaginatedProductsParams = {
-    limit: 12,
+    limit: PRODUCT_LIMIT,
   }
 
   if (collectionId) {
-    queryParams["collection_id"] = [collectionId]
+    queryParams.collection_id = [collectionId]
   }
 
   if (categoryId) {
-    queryParams["category_id"] = [categoryId]
+    queryParams.category_id = [categoryId]
   }
 
-  if (productsIds) {
-    queryParams["id"] = productsIds
+  if (productsIds?.length) {
+    queryParams.id = productsIds
   }
 
   if (sortBy === "created_at") {
-    queryParams["order"] = "created_at"
+    queryParams.order = "created_at"
   }
 
   const region = await getRegion(countryCode)
@@ -70,27 +70,75 @@ export default async function PaginatedProducts({
 
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
 
+  if (!products.length) {
+    return (
+      <div
+        dir="rtl"
+        className="
+          flex min-h-[320px]
+          items-center justify-center
+          rounded-2xl
+          border border-dashed
+          border-[rgb(var(--color-border))]
+          bg-[rgb(var(--color-surface))]
+          px-6
+          text-center
+        "
+      >
+        <div>
+          <div className="text-4xl">📦</div>
+
+          <h3 className="mt-4 text-lg font-bold text-[rgb(var(--color-foreground))]">
+            محصولی پیدا نشد
+          </h3>
+
+          <p className="mt-2 text-sm text-[rgb(var(--color-foreground-muted))]">
+            فیلترهای انتخاب‌شده محصولی برای نمایش ندارند.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <>
+    <div dir="rtl">
+      <div className="mb-5 flex items-center justify-between">
+        <span className="text-xs text-[rgb(var(--color-foreground-muted))]">
+          {count.toLocaleString("fa-IR")} محصول
+        </span>
+      </div>
+
       <ul
-        className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8"
+        className="
+          grid w-full
+          grid-cols-2
+          gap-4
+          sm:grid-cols-2
+          md:grid-cols-3
+          xl:grid-cols-4
+          2xl:gap-5
+        "
         data-testid="products-list"
       >
-        {products.map((p) => {
-          return (
-            <li key={p.id}>
-              <ProductPreview product={p} region={region} />
-            </li>
-          )
-        })}
+        {products.map((product) => (
+          <li key={product.id} className="min-w-0">
+            <ProductPreview
+              product={product}
+              region={region}
+            />
+          </li>
+        ))}
       </ul>
+
       {totalPages > 1 && (
-        <Pagination
-          data-testid="product-pagination"
-          page={page}
-          totalPages={totalPages}
-        />
+        <div className="mt-10 flex justify-center">
+          <Pagination
+            data-testid="product-pagination"
+            page={page}
+            totalPages={totalPages}
+          />
+        </div>
       )}
-    </>
+    </div>
   )
 }

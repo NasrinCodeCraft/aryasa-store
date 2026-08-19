@@ -12,39 +12,61 @@ type OptionSelectProps = {
 }
 
 const OptionSelect: React.FC<OptionSelectProps> = ({
-  option,
-  current,
-  updateOption,
-  title,
-  "data-testid": dataTestId,
-  disabled,
-}) => {
-  const filteredOptions = (option.values ?? []).map((v) => v.value)
+                                                     option,
+                                                     current,
+                                                     updateOption,
+                                                     title,
+                                                     "data-testid": dataTestId,
+                                                     disabled,
+                                                   }) => {
+  const filteredOptions = (option.values ?? [])
+    .map((v) => v.value)
+    .filter(Boolean)
 
   return (
-    <div className="flex flex-col gap-y-3">
-      <span className="text-sm">Select {title}</span>
+    <div dir="rtl" className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-semibold text-[rgb(var(--color-foreground))]">
+          {title}
+        </span>
+
+        {current && (
+          <span className="text-xs text-[rgb(var(--color-foreground-muted))]">
+            انتخاب شده: {current}
+          </span>
+        )}
+      </div>
+
       <div
-        className="flex flex-wrap justify-between gap-2"
+        className="grid grid-cols-2 gap-2 sm:grid-cols-3"
         data-testid={dataTestId}
       >
-        {filteredOptions.map((v) => {
+        {filteredOptions.map((value) => {
+          const isSelected = value === current
+
           return (
             <button
-              onClick={() => updateOption(option.id, v)}
-              key={v}
-              className={clx(
-                "border-ui-border-base bg-ui-bg-subtle border text-small-regular h-10 rounded-rounded p-2 flex-1 ",
-                {
-                  "border-ui-border-interactive": v === current,
-                  "hover:shadow-elevation-card-rest transition-shadow ease-in-out duration-150":
-                    v !== current,
-                }
-              )}
+              key={value}
+              type="button"
+              onClick={() => updateOption(option.id, value)}
               disabled={disabled}
+              aria-pressed={isSelected}
+              className={clx(
+                "relative min-h-11 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--color-primary)/0.25)] disabled:cursor-not-allowed disabled:opacity-50",
+                isSelected
+                  ? "border-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/0.07)] text-[rgb(var(--color-primary))] shadow-sm"
+                  : "border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface))] text-[rgb(var(--color-foreground))] hover:-translate-y-0.5 hover:border-[rgb(var(--color-primary)/0.5)] hover:bg-[rgb(var(--color-primary)/0.03)]"
+              )}
               data-testid="option-button"
             >
-              {v}
+              <span>{value}</span>
+
+              {isSelected && (
+                <span
+                  aria-hidden="true"
+                  className="absolute left-2 top-2 h-2 w-2 rounded-full bg-[rgb(var(--color-primary))]"
+                />
+              )}
             </button>
           )
         })}
