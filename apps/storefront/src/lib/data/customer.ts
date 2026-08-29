@@ -124,14 +124,163 @@ export async function signup(
   return completeLogin(customerForm.email, password)
 }
 
-export async function login(
-  _currentState: unknown,
-  formData: FormData
-): Promise<CustomerAuthState> {
-  const email = formData.get("email") as string
-  const password = formData.get("password") as string
+// export async function login(
+//   _currentState: unknown,
+//   formData: FormData
+// ): Promise<CustomerAuthState> {
+//   const email = formData.get("email") as string
+//   const password = formData.get("password") as string
+//
+//   return completeLogin(email, password)
+// }
 
-  return completeLogin(email, password)
+export const loginWithPhone = async (phone: string) => {
+  try {
+    const response = await sdk.auth.login(
+      "customer",
+      "phone-auth",
+      {
+        phone,
+      }
+    )
+
+    if (
+      typeof response === "string" ||
+      !response.location ||
+      response.location !== "otp"
+    ) {
+      throw new Error("ارسال کد تایید ناموفق بود")
+    }
+
+    return true
+  } catch (error: any) {
+    return error.toString()
+  }
+}
+
+export const verifyOtp = async ({
+                                  phone,
+                                  otp,
+                                  countryCode,
+                                }: {
+  phone: string
+  otp: string
+  countryCode: string
+}) => {
+  try {
+    const token = await sdk.auth.callback(
+      "customer",
+      "phone-auth",
+      {
+        phone,
+        otp,
+      }
+    )
+
+    await setAuthToken(token)
+
+    const customerCacheTag = await getCacheTag("customers")
+    revalidateTag(customerCacheTag)
+
+    try {
+      await transferCart()
+    } catch (error) {
+      console.error("TRANSFER CART ERROR:", error)
+    }
+
+    return {
+      success: true,
+      redirectTo: `/${countryCode}/account`,
+    }
+  } catch (error) {
+    console.error("VERIFY OTP ERROR:", error)
+
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : String(error),
+    }
+  }
+}
+
+export const registerWithPhone = async ({
+                                          firstName,
+                                          lastName,
+                                          phone,
+                                        }: {
+  firstName: string
+  lastName: string
+  phone: string
+}) => {
+  try {
+    const normalizedPhone = phone.replace(/\D/g, "")
+
+    if (!/^09\d{9}$/.test(normalizedPhone)) {
+      return "شماره موبایل معتبر نیست"
+    }
+
+    // 1) دریافت registration JWT
+    const { token: regToken } = await sdk.client.fetch<{
+      token: string
+    }>("/auth/customer/phone-auth/register", {
+      method: "POST",
+      body: {
+        phone: normalizedPhone,
+      },
+    })
+
+    if (!regToken) {
+      return "دریافت توکن ثبت‌نام ناموفق بود"
+    }
+
+    // 2) ثبت JWT موقت برای create customer
+    await setAuthToken(regToken)
+
+    const headers = {
+      ...(await getAuthHeaders()),
+    }
+
+    // 3) Create Customer
+    const email = `${normalizedPhone}@phone.aryasa.ir`
+
+    await sdk.store.customer.create(
+      {
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        phone: normalizedPhone,
+      },
+      {},
+      headers
+    )
+
+    // 4) ارسال OTP
+    const loginResult = await sdk.auth.login(
+      "customer",
+      "phone-auth",
+      {
+        phone: normalizedPhone,
+      }
+    )
+
+    if (
+      typeof loginResult === "object" &&
+      "location" in loginResult &&
+      loginResult.location === "otp"
+    ) {
+      return true
+    }
+
+    return "ثبت‌نام انجام شد اما ارسال کد تأیید ناموفق بود"
+  } catch (error) {
+    console.error("REGISTER WITH PHONE ERROR:", error)
+
+    return error instanceof Error
+      ? error.message
+      : String(error)
+  }
 }
 
 // Logs the customer in and reconciles the customer record. The behavior is

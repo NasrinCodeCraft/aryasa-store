@@ -1,7 +1,6 @@
 "use client"
 
 import { ArrowRightOnRectangle } from "@medusajs/icons"
-import { clx } from "@modules/common/components/ui"
 import { useParams, usePathname } from "next/navigation"
 
 import { signout } from "@lib/data/customer"
@@ -13,187 +12,490 @@ import Package from "@modules/common/icons/package"
 import User from "@modules/common/icons/user"
 
 const AccountNav = ({
-  customer,
-}: {
+                      customer,
+                    }: {
   customer: HttpTypes.StoreCustomer | null
 }) => {
   const route = usePathname()
-  const { countryCode } = useParams() as { countryCode: string }
-
-  const handleLogout = async () => {
-    await signout(countryCode)
+  const { countryCode } = useParams() as {
+    countryCode: string
   }
 
   return (
-    <div>
-      <div className="small:hidden" data-testid="mobile-account-nav">
-        {route !== `/${countryCode}/account` ? (
-          <LocalizedClientLink
-            href="/account"
-            className="flex items-center gap-x-2 text-small-regular py-2"
-            data-testid="account-main-link"
+      <aside dir="rtl" className="w-full">
+        {/* =========================================================
+          MOBILE
+      ========================================================== */}
+
+        <div
+            className="small:hidden"
+            data-testid="mobile-account-nav"
+        >
+          {route !== `/${countryCode}/account` ? (
+              <LocalizedClientLink
+                  href="/account"
+                  className="
+              flex
+              items-center
+              gap-2
+              rounded-xl
+              border
+              border-[rgb(var(--color-border))]
+              bg-[rgb(var(--color-surface))]
+              px-4
+              py-3
+              text-sm
+              font-semibold
+              text-[rgb(var(--color-foreground))]
+            "
+                  data-testid="account-main-link"
+              >
+                <ChevronDown className="rotate-90" />
+                <span>حساب کاربری</span>
+              </LocalizedClientLink>
+          ) : (
+              <div
+                  className="
+              overflow-hidden
+              rounded-2xl
+              border
+              border-[rgb(var(--color-border))]
+              bg-[rgb(var(--color-surface))]
+              shadow-[var(--shadow-card)]
+            "
+              >
+                {/* Mobile profile header */}
+
+                <div
+                    className="
+                bg-[rgb(var(--color-primary))]
+                px-5
+                py-5
+              "
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                        className="
+                    flex
+                    h-11
+                    w-11
+                    shrink-0
+                    items-center
+                    justify-center
+                    rounded-xl
+                    bg-[rgb(var(--color-accent))]
+                    text-sm
+                    font-black
+                    text-[rgb(var(--color-primary))]
+                  "
+                    >
+                      {(customer?.first_name?.charAt(0) || "A").toUpperCase()}
+                    </div>
+
+                    <div className="min-w-0 text-right">
+                  <span className="block text-[10px] text-white/60">
+                    حساب کاربری
+                  </span>
+
+                      <span className="mt-1 block truncate text-sm font-bold text-white">
+                    سلام {customer?.first_name || "کاربر"} عزیز
+                  </span>
+
+                      {customer?.phone && (
+                          <span
+                              dir="ltr"
+                              className="mt-1 block text-[10px] text-white/60"
+                          >
+                      {customer.phone}
+                    </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <ul className="divide-y divide-[rgb(var(--color-border))]">
+                  <MobileNavItem
+                      href="/account/profile"
+                      icon={<User size={19} />}
+                      label="پروفایل"
+                      description="اطلاعات حساب کاربری"
+                      data-testid="profile-link"
+                  />
+
+                  <MobileNavItem
+                      href="/account/addresses"
+                      icon={<MapPin size={19} />}
+                      label="آدرس‌ها"
+                      description="آدرس‌های ارسال و تحویل"
+                      data-testid="addresses-link"
+                  />
+
+                  <MobileNavItem
+                      href="/account/orders"
+                      icon={<Package size={19} />}
+                      label="سفارش‌ها"
+                      description="تاریخچه سفارش‌های شما"
+                      data-testid="orders-link"
+                  />
+
+                  {/* Logout */}
+
+                  <li>
+                    <form
+                        action={signout.bind(null, countryCode)}
+                    >
+                      <button
+                          type="submit"
+                          className="
+                      flex
+                      w-full
+                      items-center
+                      justify-between
+                      px-5
+                      py-4
+                      text-right
+                      transition-colors
+                      hover:bg-red-50
+                    "
+                          data-testid="logout-button"
+                      >
+                        <div className="flex items-center gap-3">
+                      <span
+                          className="
+                          flex
+                          h-10
+                          w-10
+                          items-center
+                          justify-center
+                          rounded-xl
+                          bg-red-50
+                          text-red-600
+                        "
+                      >
+                        <ArrowRightOnRectangle className="h-[18px] w-[18px]" />
+                      </span>
+
+                          <div>
+                        <span className="block text-sm font-bold text-red-600">
+                          خروج از حساب
+                        </span>
+
+                            <span className="mt-0.5 block text-[10px] text-[rgb(var(--color-foreground-muted))]">
+                          خروج امن از حساب کاربری
+                        </span>
+                          </div>
+                        </div>
+
+                        <ChevronDown className="-rotate-90 text-red-400" />
+                      </button>
+                    </form>
+                  </li>
+                </ul>
+              </div>
+          )}
+        </div>
+
+        {/* =========================================================
+          DESKTOP
+      ========================================================== */}
+
+        <div
+            className="hidden small:block"
+            data-testid="account-nav"
+        >
+          <div
+              className="
+            overflow-hidden
+            rounded-2xl
+            border
+            border-[rgb(var(--color-border))]
+            bg-[rgb(var(--color-surface))]
+            shadow-[var(--shadow-card)]
+          "
           >
-            <>
-              <ChevronDown className="transform rotate-90" />
-              <span>Account</span>
-            </>
-          </LocalizedClientLink>
-        ) : (
-          <>
-            <div className="text-xl-semi mb-4 px-8">
-              Hello {customer?.first_name}
+            {/* Header */}
+
+            <div
+                className="
+              border-b
+              border-[rgb(var(--color-border))]
+              bg-[rgb(var(--color-primary))]
+              px-5
+              py-5
+            "
+            >
+              <div className="flex items-center gap-3">
+                <div
+                    className="
+                  flex
+                  h-11
+                  w-11
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-[rgb(var(--color-accent))]
+                  text-sm
+                  font-black
+                  text-[rgb(var(--color-primary))]
+                "
+                >
+                  {(customer?.first_name?.charAt(0) || "A").toUpperCase()}
+                </div>
+
+                <div className="min-w-0">
+                <span className="block text-[10px] text-white/60">
+                  حساب کاربری
+                </span>
+
+                  <span className="mt-1 block truncate text-sm font-bold text-white">
+                  {customer?.first_name || "کاربر"}
+                </span>
+
+                  {customer?.phone && (
+                      <span
+                          dir="ltr"
+                          className="mt-1 block truncate text-[10px] text-white/55"
+                      >
+                    {customer.phone}
+                  </span>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="text-base-regular">
-              <ul>
-                <li>
-                  <LocalizedClientLink
+
+            {/* Menu */}
+
+            <nav className="p-3">
+              <ul className="flex flex-col gap-1">
+                <DesktopNavItem
+                    href="/account"
+                    route={route}
+                    data-testid="overview-link"
+                >
+                  نمای کلی
+                </DesktopNavItem>
+
+                <DesktopNavItem
                     href="/account/profile"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                    route={route}
                     data-testid="profile-link"
-                  >
-                    <>
-                      <div className="flex items-center gap-x-2">
-                        <User size={20} />
-                        <span>Profile</span>
-                      </div>
-                      <ChevronDown className="transform -rotate-90" />
-                    </>
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink
+                >
+                <span className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  پروفایل
+                </span>
+                </DesktopNavItem>
+
+                <DesktopNavItem
                     href="/account/addresses"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                    route={route}
                     data-testid="addresses-link"
-                  >
-                    <>
-                      <div className="flex items-center gap-x-2">
-                        <MapPin size={20} />
-                        <span>Addresses</span>
-                      </div>
-                      <ChevronDown className="transform -rotate-90" />
-                    </>
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink
+                >
+                <span className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  آدرس‌ها
+                </span>
+                </DesktopNavItem>
+
+                <DesktopNavItem
                     href="/account/orders"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                    route={route}
                     data-testid="orders-link"
-                  >
-                    <div className="flex items-center gap-x-2">
-                      <Package size={20} />
-                      <span>Orders</span>
-                    </div>
-                    <ChevronDown className="transform -rotate-90" />
-                  </LocalizedClientLink>
-                </li>
+                >
+                <span className="flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  سفارش‌ها
+                </span>
+                </DesktopNavItem>
+
+                {/* Divider */}
+
+                <li className="my-2 border-t border-[rgb(var(--color-border))]" />
+
+                {/* Logout */}
+
                 <li>
-                  <button
-                    type="button"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8 w-full"
-                    onClick={handleLogout}
-                    data-testid="logout-button"
+                  <form
+                      action={signout.bind(null, countryCode)}
                   >
-                    <div className="flex items-center gap-x-2">
-                      <ArrowRightOnRectangle />
-                      <span>Log out</span>
-                    </div>
-                    <ChevronDown className="transform -rotate-90" />
-                  </button>
+                    <button
+                        type="submit"
+                        className="
+                      flex
+                      w-full
+                      items-center
+                      gap-2
+                      rounded-xl
+                      px-4
+                      py-3
+                      text-right
+                      text-sm
+                      font-semibold
+                      text-red-600
+                      transition-all
+                      duration-200
+                      hover:bg-red-50
+                    "
+                        data-testid="logout-button"
+                    >
+                      <ArrowRightOnRectangle className="h-4 w-4" />
+                      خروج از حساب
+                    </button>
+                  </form>
                 </li>
               </ul>
-            </div>
-          </>
-        )}
-      </div>
-      <div className="hidden small:block" data-testid="account-nav">
-        <div>
-          <div className="pb-4">
-            <h3 className="text-base-semi">Account</h3>
-          </div>
-          <div className="text-base-regular">
-            <ul className="flex mb-0 justify-start items-start flex-col gap-y-4">
-              <li>
-                <AccountNavLink
-                  href="/account"
-                  route={route!}
-                  data-testid="overview-link"
-                >
-                  Overview
-                </AccountNavLink>
-              </li>
-              <li>
-                <AccountNavLink
-                  href="/account/profile"
-                  route={route!}
-                  data-testid="profile-link"
-                >
-                  Profile
-                </AccountNavLink>
-              </li>
-              <li>
-                <AccountNavLink
-                  href="/account/addresses"
-                  route={route!}
-                  data-testid="addresses-link"
-                >
-                  Addresses
-                </AccountNavLink>
-              </li>
-              <li>
-                <AccountNavLink
-                  href="/account/orders"
-                  route={route!}
-                  data-testid="orders-link"
-                >
-                  Orders
-                </AccountNavLink>
-              </li>
-              <li className="text-grey-700">
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  data-testid="logout-button"
-                >
-                  Log out
-                </button>
-              </li>
-            </ul>
+            </nav>
           </div>
         </div>
-      </div>
-    </div>
+      </aside>
   )
 }
 
-type AccountNavLinkProps = {
+/* ===============================================================
+   MOBILE NAV ITEM
+=============================================================== */
+
+type MobileNavItemProps = {
+  href: string
+  icon: React.ReactNode
+  label: string
+  description: string
+  "data-testid"?: string
+}
+
+const MobileNavItem = ({
+                         href,
+                         icon,
+                         label,
+                         description,
+                         "data-testid": dataTestId,
+                       }: MobileNavItemProps) => {
+  return (
+      <li>
+        <LocalizedClientLink
+            href={href}
+            className="
+          group
+          flex
+          items-center
+          justify-between
+          px-5
+          py-4
+          transition-colors
+          hover:bg-[rgb(var(--color-surface-muted))]
+        "
+            data-testid={dataTestId}
+        >
+          <div className="flex items-center gap-3">
+          <span
+              className="
+              flex
+              h-10
+              w-10
+              items-center
+              justify-center
+              rounded-xl
+              bg-[rgb(var(--color-primary)/0.07)]
+              text-[rgb(var(--color-primary))]
+              transition-colors
+              group-hover:bg-[rgb(var(--color-primary))]
+              group-hover:text-white
+            "
+          >
+            {icon}
+          </span>
+
+            <div>
+            <span className="block text-sm font-bold">
+              {label}
+            </span>
+
+              <span className="mt-0.5 block text-[10px] text-[rgb(var(--color-foreground-muted))]">
+              {description}
+            </span>
+            </div>
+          </div>
+
+          <ChevronDown className="-rotate-90 text-[rgb(var(--color-foreground-muted))]" />
+        </LocalizedClientLink>
+      </li>
+  )
+}
+
+/* ===============================================================
+   DESKTOP NAV ITEM
+=============================================================== */
+
+type DesktopNavItemProps = {
   href: string
   route: string
   children: React.ReactNode
   "data-testid"?: string
 }
 
-const AccountNavLink = ({
-  href,
-  route,
-  children,
-  "data-testid": dataTestId,
-}: AccountNavLinkProps) => {
-  const { countryCode }: { countryCode: string } = useParams()
+const DesktopNavItem = ({
+                          href,
+                          route,
+                          children,
+                          "data-testid": dataTestId,
+                        }: DesktopNavItemProps) => {
+  const {countryCode} = useParams() as {
+    countryCode: string
+  }
 
-  const active = route.split(countryCode)[1] === href
-  return (
-    <LocalizedClientLink
-      href={href}
-      className={clx("text-ui-fg-subtle hover:text-ui-fg-base", {
-        "text-ui-fg-base font-semibold": active,
-      })}
-      data-testid={dataTestId}
-    >
-      {children}
-    </LocalizedClientLink>
-  )
+  const DesktopNavItem = ({
+                            href,
+                            route,
+                            children,
+                            "data-testid": dataTestId,
+                          }: DesktopNavItemProps) => {
+    const {countryCode} = useParams() as {
+      countryCode: string
+    }
+
+    const active =
+        route.split(`/${countryCode}`)[1] === href
+
+    return (
+        <li>
+          <LocalizedClientLink
+              href={href}
+              className={
+                active
+                    ? `
+              flex
+              items-center
+              rounded-xl
+              bg-[rgb(var(--color-primary))]
+              px-4
+              py-3
+              text-sm
+              font-bold
+              text-white
+              shadow-sm
+            `
+                    : `
+              flex
+              items-center
+              rounded-xl
+              px-4
+              py-3
+              text-sm
+              text-[rgb(var(--color-foreground-muted))]
+              transition-all
+              duration-200
+              hover:bg-[rgb(var(--color-surface-muted))]
+              hover:text-[rgb(var(--color-primary))]
+            `
+              }
+              data-testid={dataTestId}
+          >
+            {children}
+          </LocalizedClientLink>
+        </li>
+    )
+  }
 }
 
 export default AccountNav

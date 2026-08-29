@@ -1,116 +1,185 @@
 "use client"
 
-import { useActionState } from "react"
-import Input from "@modules/common/components/input"
+import { useState } from "react"
+import { registerWithPhone } from "@lib/data/customer"
 import { LOGIN_VIEW } from "@modules/account/templates/login-template"
-import ErrorMessage from "@modules/checkout/components/error-message"
-import { SubmitButton } from "@modules/checkout/components/submit-button"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import { signup } from "@lib/data/customer"
+import Input from "@modules/common/components/input"
 
 type Props = {
   setCurrentView: (view: LOGIN_VIEW) => void
 }
 
 const Register = ({ setCurrentView }: Props) => {
-  const [message, formAction] = useActionState(signup, null)
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault()
+
+    setError(null)
+
+    if (!firstName.trim()) {
+      setError("نام را وارد کنید")
+      return
+    }
+
+    if (!lastName.trim()) {
+      setError("نام خانوادگی را وارد کنید")
+      return
+    }
+
+    const normalizedPhone = phone.replace(/\D/g, "")
+
+    if (!/^09\d{9}$/.test(normalizedPhone)) {
+      setError("شماره موبایل معتبر نیست")
+      return
+    }
+
+    setLoading(true)
+
+    const result = await registerWithPhone({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      phone: normalizedPhone,
+    })
+
+    setLoading(false)
+
+    if (result !== true) {
+      setError(String(result))
+      return
+    }
+
+    sessionStorage.setItem(
+      "phone_auth_phone",
+      normalizedPhone
+    )
+
+    window.location.href = "/verify-phone"
+  }
 
   return (
     <div
-      className="max-w-sm flex flex-col items-center"
+      dir="rtl"
+      className="w-full max-w-md"
       data-testid="register-page"
     >
-      <h1 className="text-large-semi uppercase mb-6">
-        Become a Medusa Store Member
-      </h1>
-      <p className="text-center text-base-regular text-ui-fg-base mb-4">
-        Create your Medusa Store Member profile, and get access to an enhanced
-        shopping experience.
-      </p>
-      {message?.state === "verification_required" && (
+      <div className="mb-8 text-center">
         <div
-          className="w-full mb-4 text-center text-base-regular text-ui-fg-base bg-ui-bg-subtle border border-ui-border-base rounded-rounded p-4"
-          data-testid="register-verification-message"
+          className="
+            mx-auto mb-5
+            flex h-16 w-16
+            items-center justify-center
+            rounded-2xl
+            bg-[rgb(var(--color-primary))]
+            text-white
+          "
         >
-          We sent a verification link to <strong>{message.email}</strong>.
-          Please check your inbox to verify your email, then sign in.
+          <span className="text-2xl font-black">
+            A
+          </span>
         </div>
-      )}
-      <form className="w-full flex flex-col" action={formAction}>
-        <div className="flex flex-col w-full gap-y-2">
+
+        <h1 className="text-2xl font-black">
+          ساخت حساب آریاسا
+        </h1>
+
+        <p className="mt-3 text-sm leading-7 text-[rgb(var(--color-foreground-muted))]">
+          برای ایجاد حساب، اطلاعات خود را وارد کنید.
+        </p>
+      </div>
+
+      <form
+        onSubmit={handleSubmit}
+        className="
+          rounded-3xl
+          border
+          border-[rgb(var(--color-border))]
+          bg-[rgb(var(--color-surface))]
+          p-6
+          shadow-[var(--shadow-card)]
+          sm:p-8
+        "
+      >
+        <div className="flex flex-col gap-5">
           <Input
-            label="First name"
+            label="نام"
             name="first_name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
             required
-            autoComplete="given-name"
-            data-testid="first-name-input"
           />
+
           <Input
-            label="Last name"
+            label="نام خانوادگی"
             name="last_name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
             required
-            autoComplete="family-name"
-            data-testid="last-name-input"
           />
+
           <Input
-            label="Email"
-            name="email"
-            required
-            type="email"
-            autoComplete="email"
-            data-testid="email-input"
-          />
-          <Input
-            label="Phone"
+            label="شماره موبایل"
             name="phone"
             type="tel"
-            autoComplete="tel"
-            data-testid="phone-input"
-          />
-          <Input
-            label="Password"
-            name="password"
+            inputMode="numeric"
+            dir="ltr"
+            placeholder="09121234567"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
             required
-            type="password"
-            autoComplete="new-password"
-            data-testid="password-input"
           />
         </div>
-        <ErrorMessage
-          error={message?.state === "error" ? message.error : null}
-          data-testid="register-error"
-        />
-        <span className="text-center text-ui-fg-base text-small-regular mt-6">
-          By creating an account, you agree to Medusa Store&apos;s{" "}
-          <LocalizedClientLink
-            href="/content/privacy-policy"
-            className="underline"
-          >
-            Privacy Policy
-          </LocalizedClientLink>{" "}
-          and{" "}
-          <LocalizedClientLink
-            href="/content/terms-of-use"
-            className="underline"
-          >
-            Terms of Use
-          </LocalizedClientLink>
-          .
-        </span>
-        <SubmitButton className="w-full mt-6" data-testid="register-button">
-          Join
-        </SubmitButton>
-      </form>
-      <span className="text-center text-ui-fg-base text-small-regular mt-6">
-        Already a member?{" "}
+
+        {error && (
+          <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
         <button
-          onClick={() => setCurrentView(LOGIN_VIEW.SIGN_IN)}
-          className="underline"
+          type="submit"
+          disabled={loading}
+          className="
+            mt-6
+            h-12
+            w-full
+            rounded-xl
+            bg-[rgb(var(--color-primary))]
+            text-sm
+            font-bold
+            text-white
+            disabled:opacity-50
+          "
         >
-          Sign in
+          {loading
+            ? "در حال ثبت..."
+            : "ایجاد حساب و دریافت کد"}
         </button>
-        .
-      </span>
+      </form>
+
+      <div className="mt-6 text-center text-sm">
+        حساب دارید؟
+
+        <button
+          type="button"
+          onClick={() =>
+            setCurrentView(LOGIN_VIEW.SIGN_IN)
+          }
+          className="
+            mr-2
+            font-bold
+            text-[rgb(var(--color-primary))]
+          "
+        >
+          ورود با شماره موبایل
+        </button>
+      </div>
     </div>
   )
 }
