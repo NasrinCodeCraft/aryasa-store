@@ -151,6 +151,11 @@ const Shipping: React.FC<ShippingProps> = ({
     setError(null)
   }, [isOpen])
 
+
+  console.log("AVAILABLE SHIPPING METHODS:", availableShippingMethods)
+  console.log("SHIPPING METHODS:", _shippingMethods)
+  console.log("CART SHIPPING METHODS:", cart.shipping_methods)
+
   return (
     <div className="bg-white">
       <div className="flex flex-row items-center justify-between mb-6">
@@ -373,13 +378,32 @@ const Shipping: React.FC<ShippingProps> = ({
             />
             <Button
               size="large"
-              className="mt"
+              className="
+    mt-6
+    h-12
+    w-full
+    rounded-2xl
+    bg-[rgb(var(--color-primary))]
+    text-sm
+    font-black
+    text-white
+    shadow-[var(--shadow-card)]
+    transition-all
+    duration-200
+    hover:-translate-y-0.5
+    hover:shadow-[var(--shadow-elevated)]
+    disabled:cursor-not-allowed
+    disabled:opacity-50
+    sm:w-auto
+    sm:px-8
+  "
               onClick={handleSubmit}
               isLoading={isLoading}
-              disabled={!cart.shipping_methods?.[0]}
+              disabled={!shippingMethodId || isLoading}
               data-testid="submit-delivery-option-button"
             >
-              Continue to payment
+              ادامه به پرداخت
+              <span className="mr-2">←</span>
             </Button>
           </div>
         </>

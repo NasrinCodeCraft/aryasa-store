@@ -164,57 +164,28 @@ const Summary = ({ cart }: SummaryProps) => {
           "
         >
           <LocalizedClientLink
-            href={`/checkout?step=${step}`}
+            href="/checkout?step=address"
             className="block w-full"
             data-testid="checkout-button"
           >
-            <Button
-              className="
-                group
-                flex
-                h-14
-                w-full
-                items-center
-                justify-center
-                gap-3
-                rounded-2xl
-                bg-[rgb(var(--color-primary))]
-                text-sm
-                font-black
-                text-white
-                shadow-[var(--shadow-card)]
-                transition-all
-                duration-200
-                hover:-translate-y-0.5
-                hover:shadow-[var(--shadow-elevated)]
-              "
-            >
-              <span>
-                ادامه و ثبت سفارش
-              </span>
+            <Button className="group flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-[rgb(var(--color-primary))] text-sm font-black text-white">
+              <span>ادامه برای ثبت سفارش</span>
 
-              <span
-                className="
-                  transition-transform
-                  duration-200
-                  group-hover:-translate-x-1
-                "
-              >
-                ←
-              </span>
+              <span className="transition-transform duration-200 group-hover:-translate-x-1">
+      ←
+    </span>
             </Button>
           </LocalizedClientLink>
-
           <p
             className="
-              mt-3
-              text-center
-              text-[10px]
-              leading-5
-              text-[rgb(var(--color-foreground-muted))]
-            "
+    mt-3
+    text-center
+    text-[10px]
+    leading-5
+    text-[rgb(var(--color-foreground-muted))]
+  "
           >
-            در مرحله بعد اطلاعات ارسال و پرداخت را تکمیل می‌کنید.
+            پس از تأیید آدرس، سفارش شما ثبت می‌شود و برای هماهنگی با شما تماس می‌گیریم.
           </p>
         </div>
 

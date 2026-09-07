@@ -27,7 +27,12 @@ export const listCartShippingMethods = async (cartId: string) => {
       }
     )
     .then(({ shipping_options }) => shipping_options)
-    .catch(() => {
+    .catch((error) => {
+      console.error(
+        "LIST CART SHIPPING METHODS ERROR:",
+        error
+      )
+
       return null
     })
 }

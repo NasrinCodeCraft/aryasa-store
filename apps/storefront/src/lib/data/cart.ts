@@ -250,9 +250,23 @@ export async function initiatePaymentSession(
     .then(async (resp) => {
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
+
+      console.log(
+        "✅ PAYMENT SESSION CREATED:",
+        JSON.stringify(resp, null, 2)
+      )
+
       return resp
     })
-    .catch(medusaError)
+    .catch((error: any) => {
+      console.error("❌ PAYMENT SESSION RAW ERROR:", error)
+      console.error("❌ MESSAGE:", error?.message)
+      console.error("❌ STATUS:", error?.status)
+      console.error("❌ BODY:", error?.body)
+      console.error("❌ RESPONSE:", error?.response)
+
+      throw error
+    })
 }
 
 export async function applyPromotions(codes: string[]) {
@@ -334,56 +348,78 @@ export async function submitPromotionForm(
 }
 
 // TODO: Pass a POJO instead of a form entity here
-export async function setAddresses(currentState: unknown, formData: FormData) {
+export async function setAddresses(
+  currentState: unknown,
+  formData: FormData
+) {
+  let cartId: string
+
   try {
-    if (!formData) {
-      throw new Error("No form data found when setting addresses")
-    }
-    const cartId = getCartId()
-    if (!cartId) {
-      throw new Error("No existing cart found when setting addresses")
+    const id = await getCartId()
+
+    if (!id) {
+      throw new Error("سبد خرید پیدا نشد")
     }
 
-    const data = {
-      shipping_address: {
-        first_name: formData.get("shipping_address.first_name"),
-        last_name: formData.get("shipping_address.last_name"),
-        address_1: formData.get("shipping_address.address_1"),
-        address_2: "",
-        company: formData.get("shipping_address.company"),
-        postal_code: formData.get("shipping_address.postal_code"),
-        city: formData.get("shipping_address.city"),
-        country_code: formData.get("shipping_address.country_code"),
-        province: formData.get("shipping_address.province"),
-        phone: formData.get("shipping_address.phone"),
-      },
-      email: formData.get("email"),
-    } as any
+    cartId = id
 
-    const sameAsBilling = formData.get("same_as_billing")
-    if (sameAsBilling === "on") data.billing_address = data.shipping_address
+    const shippingAddress = {
+      first_name: String(
+        formData.get("shipping_address.first_name") ?? ""
+      ),
+      last_name: String(
+        formData.get("shipping_address.last_name") ?? ""
+      ),
+      address_1: String(
+        formData.get("shipping_address.address_1") ?? ""
+      ),
+      address_2: "",
+      company: String(
+        formData.get("shipping_address.company") ?? ""
+      ),
+      postal_code: String(
+        formData.get("shipping_address.postal_code") ?? ""
+      ),
+      city: String(
+        formData.get("shipping_address.city") ?? ""
+      ),
+      country_code: String(
+        formData.get("shipping_address.country_code") ?? ""
+      ),
+      province: String(
+        formData.get("shipping_address.province") ?? ""
+      ),
+      phone: String(
+        formData.get("shipping_address.phone") ?? ""
+      ),
+    }
 
-    if (sameAsBilling !== "on")
-      data.billing_address = {
-        first_name: formData.get("billing_address.first_name"),
-        last_name: formData.get("billing_address.last_name"),
-        address_1: formData.get("billing_address.address_1"),
-        address_2: "",
-        company: formData.get("billing_address.company"),
-        postal_code: formData.get("billing_address.postal_code"),
-        city: formData.get("billing_address.city"),
-        country_code: formData.get("billing_address.country_code"),
-        province: formData.get("billing_address.province"),
-        phone: formData.get("billing_address.phone"),
-      }
+    const data: HttpTypes.StoreUpdateCart = {
+      shipping_address: shippingAddress,
+      email: String(formData.get("email") ?? ""),
+    }
+
+    if (formData.get("same_as_billing") === "on") {
+      data.billing_address = shippingAddress
+    }
+
     await updateCart(data)
-  } catch (e: any) {
-    return e.message
+
+    console.log("✅ ADDRESS + CART SAVED")
+  } catch (error: any) {
+    console.error("❌ ADDRESS ERROR:", error)
+
+    return (
+      error?.message ||
+      "در ذخیره اطلاعات مشکلی ایجاد شد."
+    )
   }
 
-  redirect(
-    `/${formData.get("shipping_address.country_code")}/checkout?step=delivery`
-  )
+  console.log("🚀 GOING TO PLACE ORDER")
+
+  // خیلی مهم:
+  // خارج از try/catch
+  return placeOrder(cartId)
 }
 
 /**
@@ -392,41 +428,82 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
  * @returns The cart object if the order was successful, or null if not.
  */
 export async function placeOrder(cartId?: string) {
+  console.log("========== PLACE ORDER START ==========")
+
   const id = cartId || (await getCartId())
 
+  console.log("7️⃣ CART ID:", id)
+
   if (!id) {
-    throw new Error("No existing cart found when placing an order")
+    throw new Error("سبد خرید پیدا نشد")
   }
 
   const headers = {
     ...(await getAuthHeaders()),
   }
 
-  const cartRes = await sdk.store.cart
-    .complete(id, {}, headers)
-    .then(async (cartRes) => {
-      const cartCacheTag = await getCacheTag("carts")
-      revalidateTag(cartCacheTag)
-      return cartRes
-    })
-    .catch(medusaError)
+  console.log("8️⃣ GETTING CART...")
 
-  if (cartRes?.type === "order") {
+  const { cart } = await sdk.store.cart.retrieve(
+    id,
+    {},
+    headers
+  )
+
+  console.log("9️⃣ CART RECEIVED:", {
+    id: cart?.id,
+    region_id: cart?.region_id,
+    email: cart?.email,
+    shipping_address: cart?.shipping_address,
+    billing_address: cart?.billing_address,
+    shipping_methods: cart?.shipping_methods,
+  })
+
+  console.log("🔟 INITIATING PAYMENT SESSION...")
+
+  const paymentResult = await initiatePaymentSession(cart, {
+    provider_id: "pp_system_default",
+  })
+
+  console.log(
+    "1️⃣1️⃣ PAYMENT SESSION RESULT:",
+    JSON.stringify(paymentResult, null, 2)
+  )
+
+  console.log("1️⃣2️⃣ COMPLETING CART...")
+
+  const cartRes = await sdk.store.cart.complete(
+    id,
+    {},
+    headers
+  )
+
+  console.log(
+    "1️⃣3️⃣ COMPLETE RESULT:",
+    JSON.stringify(cartRes, null, 2)
+  )
+
+  if (cartRes.type === "order" && cartRes.order) {
+    await removeCartId()
+
     const countryCode =
-      cartRes.order.shipping_address?.country_code?.toLowerCase()
+      cartRes.order.shipping_address?.country_code?.toLowerCase() || "ir"
 
-    const orderCacheTag = await getCacheTag("orders")
-    revalidateTag(orderCacheTag)
-
-    removeCartId()
-    redirect(`/${countryCode}/order/${cartRes?.order.id}/confirmed`)
+    redirect(
+      `/${countryCode}/order/${cartRes.order.id}/confirmed`
+    )
   }
 
-  return cartRes.cart
+  if (cartRes.type === "cart") {
+    throw new Error(
+      cartRes.error?.message || "ثبت سفارش انجام نشد"
+    )
+  }
+
+  throw new Error("ثبت سفارش انجام نشد")
 }
 
-/**
- * Updates the countrycode param and revalidates the regions cache
+/* Updates the countrycode param and revalidates the regions cache
  * @param regionId
  * @param countryCode
  */
